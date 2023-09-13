@@ -1,80 +1,68 @@
-import datetime
-import torch.nn as nn
-from torchsummary import summary
 import argparse
-import torch.optim as optimizer
+import datetime
 import torch
-import torch.nn.functional as F
-from torchvision import datasets, transforms
-from torchvision.datasets import MNIST
-import torch.optim.lr_scheduler as scheduler
-
-
-
-def main():
-    # Define and parse command-line arguments
-    parser = argparse.ArgumentParser(description='Training script for the model')
-    parser.add_argument('-z', type=int, help='Value for -z')
-    parser.add_argument('-e', type=int, help='Value for -e')
-    parser.add_argument('-b', type=int, help='Value for -b')
-    parser.add_argument('-s', type=str, help='Value for -s')
-    parser.add_argument('-p', type=str, help='Value for -p')
-    args = parser.parse_args()
-
-    # Extract the parsed arguments
-    z_value = args.z
-    e_value = args.e
-    b_value = args.b
-    s_value = args.s
-    p_value = args.p
-
-    print('Parsed arguments:')
-    print('-z:', z_value)
-    print('-e:', e_value)
-    print('-b:', b_value)
-    print('-s:', s_value)
-    print('-p:', p_value)
-
-    retString = [z_value, e_value, b_value, s_value, p_value]
-    return retString
-
-
-if __name__ == '__main__':
-    main()
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import datasets
+from model import autoencoderMLP4Layer  # Import your model class from the 'model' module
+import torchvision.transforms as transforms
+from torchsummary import summary
 
 def train(n_epochs, optimizer, model, loss_fn, train_loader, scheduler, device):
     print('Training...')
-    model.train() #keep track of gradient for backtracking
+    model.train()
     losses_train = []
 
     for epoch in range(1, n_epochs+1):
-        print('epoch ', epoch)
+        print('epoch', epoch)
         loss_train = 0.0
-        for imgs in train_loader:           # imgs is a minibatch of data
-            imgs = imgs.to(device=device)   # use cpu or gpu
-            outputs = model(imgs)           # forward propogation through network
-            loss = loss_fn(outputs, imgs)   # calculate loss
-            optimizer.zero_grad()           # reset optimizer gradients to zero
-            loss.backward()                 # calculate loss gradients
-            optimizer.step()                # iterate the optimization, based on loss gradients
-            loss_train += loss.item         # update value of losses
+        for imgs, _ in train_loader:  # imgs is a minibatch of data, _ is the label (not used in autoencoder)
+            imgs = imgs.view(imgs.size(0), -1).to(device=device)
+            outputs = model(imgs)
+            loss = loss_fn(outputs, imgs)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            loss_train += loss.item()
 
+        scheduler.step(loss_train)
 
-        scheduler.step(loss_train)  #update some optimization hyperparameters
+        losses_train.append(loss_train / len(train_loader))
 
-        losses_train += [loss_train/len(train_loader)]  #update value of losses
-
-        print('{} Epoch {}, Training loss {}'.format(
-            datetime.datetime.now(), epoch, loss_train/len(train_loader)
+        print('{} Epoch {}, Training loss {:.4f}'.format(
+            datetime.datetime.now(), epoch, loss_train / len(train_loader)
         ))
 
-        #summary(model, input_size=len(train_loader))
+def main():
+    parser = argparse.ArgumentParser(description='MLP Autoencoder Training')
+    parser.add_argument('-z', '--bottleneck', type=int, default=8, help='Bottleneck size')
+    parser.add_argument('-e', '--epochs', type=int, default=50, help='Number of training epochs')
+    parser.add_argument('-b', '--batch-size', type=int, default=2048, help='Batch size')
+    parser.add_argument('-s', '--save-model', type=str, default='MLP.8.pth', help='Path to save the model')
+    parser.add_argument('-p', '--save-plot', type=str, default='loss.MLP.8.png', help='Path to save the loss plot')
+    args = parser.parse_args()
 
-        #to make module callable, if __name__=main:
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-values = main()
-train_transform = transforms.Compose([transforms.ToTensor()])
-train_set = MNIST('./data/mnist', train=True, download=True, transform=train_transform)
+    # Define data transformations and load MNIST dataset
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
+    train_dataset = datasets.MNIST('./data/mnist', train=True, transform=transform, download=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 
+    # Initialize model, loss function, optimizer, and learning rate scheduler
+    model = autoencoderMLP4Layer(N_bottleneck=args.bottleneck)
+    model.to(device)
+    loss_fn = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, verbose=True)
 
-train(values[1], optimizer, 'model.py', nn.MSELoss, train_set, scheduler, 'cpu')
+    summary(model, (1, 28, 28))
+
+    # Train the model
+    train(args.epochs, optimizer, model, loss_fn, train_loader, scheduler, device)
+
+    # Save the trained model
+    torch.save(model.state_dict(), args.save_model)
+
+if __name__ == '__main__':
+    main()
