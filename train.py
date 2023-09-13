@@ -3,10 +3,10 @@ import datetime
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torchsummary
 from torchvision import datasets
 from model import autoencoderMLP4Layer  # Import your model class from the 'model' module
 import torchvision.transforms as transforms
-from torchsummary import summary
 import matplotlib.pyplot as plt
 
 def train(n_epochs, optimizer, model, loss_fn, train_loader, scheduler, device, args):
@@ -55,7 +55,7 @@ def main():
     args = parser.parse_args()
 
     #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    device = torch.device('cuda')
+    device = 'cuda'
 
     # Define data transformations and load MNIST dataset
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
@@ -66,10 +66,10 @@ def main():
     model = autoencoderMLP4Layer(N_bottleneck=args.bottleneck)
     model.to(device)
     loss_fn = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, verbose=True)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-5)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
 
-    #summary(model, (1, 28, 28))
+    torchsummary.summary(model, (1, 28*28))
 
     # Train the model
     train(args.epochs, optimizer, model, loss_fn, train_loader, scheduler, device, args)
