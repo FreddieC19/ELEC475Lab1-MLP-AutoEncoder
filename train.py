@@ -7,8 +7,9 @@ from torchvision import datasets
 from model import autoencoderMLP4Layer  # Import your model class from the 'model' module
 import torchvision.transforms as transforms
 from torchsummary import summary
+import matplotlib as plt
 
-def train(n_epochs, optimizer, model, loss_fn, train_loader, scheduler, device):
+def train(n_epochs, optimizer, model, loss_fn, train_loader, scheduler, device, args):
     print('Training...')
     model.train()
     losses_train = []
@@ -32,6 +33,19 @@ def train(n_epochs, optimizer, model, loss_fn, train_loader, scheduler, device):
         print('{} Epoch {}, Training loss {:.4f}'.format(
             datetime.datetime.now(), epoch, loss_train / len(train_loader)
         ))
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(loss_train, label='Training Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+
+    # Save the loss plot
+    plt.savefig(args.save_plot)
+    plt.close()
+
+
 
 def main():
     parser = argparse.ArgumentParser(description='MLP Autoencoder Training')
@@ -59,10 +73,11 @@ def main():
     summary(model, (1, 28, 28))
 
     # Train the model
-    train(args.epochs, optimizer, model, loss_fn, train_loader, scheduler, device)
+    train(args.epochs, optimizer, model, loss_fn, train_loader, scheduler, device, args)
 
     # Save the trained model
     torch.save(model.state_dict(), args.save_model)
+
 
 if __name__ == '__main__':
     main()
