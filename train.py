@@ -7,7 +7,7 @@ from torchvision import datasets
 from model import autoencoderMLP4Layer  # Import your model class from the 'model' module
 import torchvision.transforms as transforms
 from torchsummary import summary
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 def train(n_epochs, optimizer, model, loss_fn, train_loader, scheduler, device, args):
     print('Training...')
@@ -35,7 +35,7 @@ def train(n_epochs, optimizer, model, loss_fn, train_loader, scheduler, device, 
         ))
 
     plt.figure(figsize=(10, 5))
-    plt.plot(loss_train, label='Training Loss')
+    plt.plot(range(1, len(losses_train) + 1), losses_train, label='Training Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
@@ -44,8 +44,6 @@ def train(n_epochs, optimizer, model, loss_fn, train_loader, scheduler, device, 
     # Save the loss plot
     plt.savefig(args.save_plot)
     plt.close()
-
-
 
 def main():
     parser = argparse.ArgumentParser(description='MLP Autoencoder Training')
@@ -56,7 +54,8 @@ def main():
     parser.add_argument('-p', '--save-plot', type=str, default='loss.MLP.8.png', help='Path to save the loss plot')
     args = parser.parse_args()
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda')
 
     # Define data transformations and load MNIST dataset
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
@@ -70,7 +69,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, verbose=True)
 
-    summary(model, (1, 28, 28))
+    #summary(model, (1, 28, 28))
 
     # Train the model
     train(args.epochs, optimizer, model, loss_fn, train_loader, scheduler, device, args)
