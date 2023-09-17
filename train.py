@@ -63,7 +63,7 @@ def main():
         print("Using GPU")
 
     # Define data transformations and load MNIST dataset
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
+    transform = transforms.Compose([transforms.ToTensor()])
     train_dataset = datasets.MNIST('./data/mnist', train=True, transform=transform, download=True)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 
@@ -71,7 +71,7 @@ def main():
     model = autoencoderMLP4Layer(N_bottleneck=args.bottleneck)
     model.to(device)
     loss_fn = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-8)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
     scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
 
     torchsummary.summary(model, (1, 28 * 28))
