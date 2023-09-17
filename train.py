@@ -4,11 +4,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchsummary
+from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets
-from model import autoencoderMLP4Layer
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 
+# Import your autoencoderMLP4Layer model here
+from model import autoencoderMLP4Layer
 
 def train(n_epochs, optimizer, model, loss_fn, train_loader, scheduler, device, args):
     print('Training...')
@@ -27,9 +29,9 @@ def train(n_epochs, optimizer, model, loss_fn, train_loader, scheduler, device, 
             optimizer.step()
             loss_train += loss.item()
 
-        scheduler.step(loss_train)
+        scheduler.step()  # Removed the argument 'loss_train'
 
-        losses_train += [loss_train / len(train_loader)]
+        losses_train.append(loss_train / len(train_loader))
 
         print('{} Epoch {}, Training loss {:.4f}'.format(
             datetime.datetime.now(), epoch, loss_train / len(train_loader)
@@ -46,7 +48,6 @@ def train(n_epochs, optimizer, model, loss_fn, train_loader, scheduler, device, 
     plt.savefig(args.save_plot)
     plt.close()
 
-
 def main():
     parser = argparse.ArgumentParser(description='MLP Autoencoder Training')
     parser.add_argument('-z', '--bottleneck', type=int, default=64, help='Bottleneck size')
@@ -58,21 +59,20 @@ def main():
 
     # Use CUDA if available
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    if torch.cuda.is_available(): print("Using GPU")
+    if torch.cuda.is_available():
+        print("Using GPU")
 
     # Define data transformations and load MNIST dataset
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
     train_dataset = datasets.MNIST('./data/mnist', train=True, transform=transform, download=True)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 
-    print (len(train_loader))
-
     # Initialize model, loss function, optimizer, and learning rate scheduler
     model = autoencoderMLP4Layer(N_bottleneck=args.bottleneck)
     model.to(device)
     loss_fn = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-8)
+    scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
 
     torchsummary.summary(model, (1, 28 * 28))
 
@@ -81,7 +81,6 @@ def main():
 
     # Save the trained model
     torch.save(model.state_dict(), args.save_model)
-
 
 if __name__ == '__main__':
     main()
