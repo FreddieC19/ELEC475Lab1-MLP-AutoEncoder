@@ -70,8 +70,8 @@ def main():
     model = autoencoderMLP4Layer(N_bottleneck=args.bottleneck)
     model.to(device)
     loss_fn = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0065, weight_decay=1e-5)
-    scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
+    scheduler = StepLR(optimizer, step_size=5, gamma=0.9)
 
     #print summary
     torchsummary.summary(model, (1, 28 * 28))
