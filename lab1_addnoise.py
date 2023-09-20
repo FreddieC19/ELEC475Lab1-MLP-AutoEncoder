@@ -24,7 +24,7 @@ input_image, _ = train_set[index]
 input_image = input_image.view(-1)
 
 #add noise to input image
-noise_amt = 0.8
+noise_amt = 0.2
 input_noise = input_image + noise_amt*torch.randn(input_image.shape)
 
 #forward pass the input image through the model to get the reconstructed output

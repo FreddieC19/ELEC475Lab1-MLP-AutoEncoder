@@ -12,11 +12,17 @@ class autoencoderMLP4Layer(nn.Module):
         self.input_shape = (1, 28 * 28)
 
     def forward(self, X):
-        #encoder
+        return self.decode(self.encode(X))
+
+    def encode(self, X):
+        # encoder
         X = torch.relu(self.fc1(X))
         X = torch.relu(self.fc2(X))
 
-        #decoder
+        return X
+
+    def decode(self, X):
+        # decoder
         X = torch.relu(self.fc3(X))
         X = torch.sigmoid(self.fc4(X))
 
