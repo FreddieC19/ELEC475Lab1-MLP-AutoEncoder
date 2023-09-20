@@ -4,42 +4,44 @@ from torchvision.datasets import MNIST
 import matplotlib.pyplot as plt
 from model import autoencoderMLP4Layer
 
+
 class addNoise:
-    def __init__(self,modelPath,index):
+    def __init__(self, modelPath, index):
         self.modelPath = modelPath
         self.index = index
 
     def applyNoise(self, modelPath, index):
-        #define a transform to use for displaying images
-        display_transform = transforms.Compose([transforms.ToPILImage(), transforms.Resize((28, 28)), transforms.ToTensor()])
+        # define a transform to use for displaying images
+        display_transform = transforms.Compose(
+            [transforms.ToPILImage(), transforms.Resize((28, 28)), transforms.ToTensor()])
 
-        #load the MNIST dataset and apply same transform as used during training
+        # load the MNIST dataset and apply same transform as used during training
         train_transform = transforms.Compose([transforms.ToTensor()])
         train_set = MNIST('./data/mnist', train=True, download=True, transform=train_transform)
 
-        #load trained autoencoder model
+        # load trained autoencoder model
         model = autoencoderMLP4Layer(N_bottleneck=8)
         model.load_state_dict(torch.load(modelPath))
         model.eval()
 
-        #get input image from dataset and flatten it
+        # get input image from dataset and flatten it
         input_image, _ = train_set[index]
         input_image = input_image.view(-1)
 
-        #add noise to input image
+        # add noise to input image
         noise_amt = 0.2
-        input_noise = input_image + noise_amt*torch.randn(input_image.shape)
+        input_noise = input_image + noise_amt * torch.randn(input_image.shape)
 
-        #forward pass the input image through the model to get the reconstructed output
+        # forward pass the input image through the model to get the reconstructed output
         with torch.no_grad():
             reconstructed_image = model(input_noise.unsqueeze(0)).squeeze(0)
 
-        #convert the input and reconstructed images to NumPy arrays
+        # convert the input and reconstructed images to NumPy arrays
         input_image_numpy = input_image.view(28, 28).cpu().numpy()
         reconstructed_image_numpy = reconstructed_image.view(28, 28).cpu().numpy()  # Reshape to (28, 28)
         input_noise_numpy = input_noise.view(28, 28).cpu().numpy()
 
-        #display the input and reconstructed images side by side
+        # display the input and reconstructed images side by side
         plt.figure(figsize=(12, 4))
         plt.subplot(1, 3, 1)
         plt.title("Original Input Image")
@@ -54,5 +56,3 @@ class addNoise:
         plt.imshow(reconstructed_image_numpy, cmap='gray')
 
         plt.show()
-
-
