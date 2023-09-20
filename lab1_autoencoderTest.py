@@ -4,12 +4,11 @@ from torchvision.datasets import MNIST
 import matplotlib.pyplot as plt
 from model import autoencoderMLP4Layer
 
-class addNoise:
+class testAutoencoder:
     def __init__(self,modelPath,index):
         self.modelPath = modelPath
         self.index = index
-
-    def applyNoise(self, modelPath, index):
+    def runAutoencoder(self, modelPath, index):
         #define a transform to use for displaying images
         display_transform = transforms.Compose([transforms.ToPILImage(), transforms.Resize((28, 28)), transforms.ToTensor()])
 
@@ -26,33 +25,24 @@ class addNoise:
         input_image, _ = train_set[index]
         input_image = input_image.view(-1)
 
-        #add noise to input image
-        noise_amt = 0.2
-        input_noise = input_image + noise_amt*torch.randn(input_image.shape)
 
         #forward pass the input image through the model to get the reconstructed output
         with torch.no_grad():
-            reconstructed_image = model(input_noise.unsqueeze(0)).squeeze(0)
+            reconstructed_image = model(input_image.unsqueeze(0)).squeeze(0)
 
         #convert the input and reconstructed images to NumPy arrays
         input_image_numpy = input_image.view(28, 28).cpu().numpy()
         reconstructed_image_numpy = reconstructed_image.view(28, 28).cpu().numpy()  # Reshape to (28, 28)
-        input_noise_numpy = input_noise.view(28, 28).cpu().numpy()
 
         #display the input and reconstructed images side by side
-        plt.figure(figsize=(12, 4))
-        plt.subplot(1, 3, 1)
+        plt.figure(figsize=(8, 4))
+        plt.subplot(1, 2, 1)
         plt.title("Original Input Image")
         plt.imshow(input_image_numpy, cmap='gray')
 
-        plt.subplot(1, 3, 2)
-        plt.title("Noisy Input Image")
-        plt.imshow(input_noise_numpy, cmap='gray')
 
-        plt.subplot(1, 3, 3)
+        plt.subplot(1, 2, 2)
         plt.title("Reconstructed Image")
         plt.imshow(reconstructed_image_numpy, cmap='gray')
 
         plt.show()
-
-
