@@ -11,8 +11,6 @@ class testAutoencoder:
         self.index = index
 
     def runAutoencoder(self, modelPath, index):
-        # define a transform to use for displaying images
-        display_transform = transforms.Compose([transforms.ToPILImage(), transforms.Resize((28, 28)), transforms.ToTensor()])
 
         # load the MNIST dataset and apply same transform as used during training
         train_transform = transforms.Compose([transforms.ToTensor()])
