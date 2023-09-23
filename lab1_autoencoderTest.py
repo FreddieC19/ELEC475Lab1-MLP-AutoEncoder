@@ -12,9 +12,9 @@ class testAutoencoder:
 
     def runAutoencoder(self, modelPath, index):
 
-        # load the MNIST dataset and apply same transform as used during training
-        train_transform = transforms.Compose([transforms.ToTensor()])
-        train_set = MNIST('./data/mnist', train=True, download=True, transform=train_transform)
+        # load the MNIST dataset
+        transform = transforms.Compose([transforms.ToTensor()])
+        data_set = MNIST('./data/mnist', train=True, download=True, transform=transform)
 
         # load trained autoencoder model
         model = autoencoderMLP4Layer(N_bottleneck=8)
@@ -22,7 +22,7 @@ class testAutoencoder:
         model.eval()
 
         # get input image from dataset and flatten it
-        input_image, _ = train_set[index]
+        input_image, _ = data_set[index]
         input_image = input_image.view(-1)
 
         # forward pass the input image through the model to get the reconstructed output

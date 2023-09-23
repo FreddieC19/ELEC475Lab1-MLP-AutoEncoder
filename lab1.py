@@ -1,6 +1,7 @@
 import argparse
 from lab1_addnoise import addNoise
 from lab1_autoencoderTest import testAutoencoder
+from lab1_linearinterpolation import linearInterpolator
 
 
 # prompts user for input and ensures it falls in valid range
@@ -48,5 +49,8 @@ addNoiseObject.applyNoise(modelPath, index)
 
 # get second index for linear interpolation
 index2 = get_valid_index2(index)
+linearInterpolationObject = linearInterpolator(modelPath, n_steps=8)
+linearInterpolationObject.interpolator(index, index2)
+
 
 
