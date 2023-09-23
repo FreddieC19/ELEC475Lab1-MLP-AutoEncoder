@@ -12,9 +12,9 @@ class testAutoencoder:
 
     def runAutoencoder(self, modelPath, index):
 
-        # load the MNIST dataset
-        transform = transforms.Compose([transforms.ToTensor()])
-        data_set = MNIST('./data/mnist', train=True, download=True, transform=transform)
+        # load MNIST dataset and apply transform
+        data_transform = transforms.Compose([transforms.ToTensor()])
+        data_set = MNIST('./data/mnist', train=True, download=True, transform=data_transform)
 
         # load trained autoencoder model
         model = autoencoderMLP4Layer(N_bottleneck=8)
@@ -22,15 +22,15 @@ class testAutoencoder:
         model.eval()
 
         # get input image from dataset and flatten it
-        input_image, _ = data_set[index]
-        input_image = input_image.view(-1)
+        inputImage, _ = data_set[index]
+        inputImage = inputImage.view(-1)
 
-        # forward pass the input image through the model to get the reconstructed output
+        # forward pass the input image through the model to get reconstructed output
         with torch.no_grad():
-            reconstructed_image = model(input_image.unsqueeze(0)).squeeze(0)
+            reconstructed_image = model(inputImage.unsqueeze(0)).squeeze(0)
 
         # convert the input and reconstructed images to NumPy arrays
-        input_image_numpy = input_image.view(28, 28).cpu().numpy()
+        input_image_numpy = inputImage.view(28, 28).cpu().numpy()
         reconstructed_image_numpy = reconstructed_image.view(28, 28).cpu().numpy()  # Reshape to (28, 28)
 
         # display the input and reconstructed images side by side

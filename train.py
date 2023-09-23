@@ -8,8 +8,6 @@ from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
-
-# import autoencoderMLP4Layer model
 from model import autoencoderMLP4Layer
 
 
@@ -78,7 +76,7 @@ def main():
     # print summary
     torchsummary.summary(model, (1, 28 * 28))
 
-    # call train function to train model with established parameters
+    # call train function to train model with previously established parameters
     train(args.epochs, optimizer, model, loss_fn, train_loader, scheduler, device, args)
 
     # save the trained model

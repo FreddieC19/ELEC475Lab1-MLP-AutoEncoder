@@ -35,9 +35,10 @@ def get_valid_index2(index1):
 parser = argparse.ArgumentParser(description='Calling Lab 1 with desired model file')
 parser.add_argument('-l', '--modelPath', type=str, default="MLP.8.pth", help='name of model file')
 args = parser.parse_args()
-
-index = get_valid_index()
 modelPath = args.modelPath
+
+# get first index
+index = get_valid_index()
 
 # demonstrate step 4 functionality
 autoencoderObject = testAutoencoder(modelPath, index)
@@ -47,10 +48,7 @@ autoencoderObject.runAutoencoder(modelPath, index)
 addNoiseObject = addNoise(modelPath, index)
 addNoiseObject.applyNoise(modelPath, index)
 
-# get second index for linear interpolation
+# get second index for linear interpolation and demonstrate step 6 functionality
 index2 = get_valid_index2(index)
-linearInterpolationObject = linearInterpolator(modelPath, n_steps=8)
-linearInterpolationObject.interpolator(index, index2)
-
-
-
+linearInterpolationObject = linearInterpolator(modelPath, 8, index, index2)
+linearInterpolationObject.interpolator(modelPath, 8, index, index2)

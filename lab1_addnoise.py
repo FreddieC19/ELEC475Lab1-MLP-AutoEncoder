@@ -12,9 +12,9 @@ class addNoise:
 
     def applyNoise(self, modelPath, index):
 
-        # load the MNIST dataset
-        transform = transforms.Compose([transforms.ToTensor()])
-        data_set = MNIST('./data/mnist', train=True, download=True, transform=transform)
+        # load MNIST dataset and apply transform
+        data_transform = transforms.Compose([transforms.ToTensor()])
+        data_set = MNIST('./data/mnist', train=True, download=True, transform=data_transform)
 
         # load trained autoencoder model
         model = autoencoderMLP4Layer(N_bottleneck=8)
@@ -29,7 +29,7 @@ class addNoise:
         noise_amt = 0.2
         input_noise = input_image + noise_amt * torch.randn(input_image.shape)
 
-        # forward pass the input image through the model to get the reconstructed output
+        # forward pass the input image through the model to get reconstructed output
         with torch.no_grad():
             reconstructed_image = model(input_noise.unsqueeze(0)).squeeze(0)
 

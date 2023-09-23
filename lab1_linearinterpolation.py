@@ -3,48 +3,61 @@ import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 from torchvision.datasets import MNIST
 from model import autoencoderMLP4Layer
-from torch import nn
+
 
 class linearInterpolator:
-    def __init__(self, modelPath, n_steps):
-        self.model = autoencoderMLP4Layer()
-        self.model.load_state_dict(torch.load(modelPath))
-        self.model.eval()
-        self.n_steps = n_steps
+    def __init__(self, modelPath, numSteps, index1, index2):
+        self.modelPath = modelPath
+        self.numSteps = numSteps
+        self.index1 = index1
+        self.index2 = index2
 
-    def interpolator(self, index1, index2):
-        # load the MNIST dataset and apply same transform as used during training
-        transform = transforms.Compose([transforms.ToTensor()])
-        data_set = MNIST('./data/mnist', train=True, download=True, transform=transform)
+    def interpolator(self, modelPath, numSteps, index1, index2):
+        # load MNIST dataset and apply transform
+        data_transform = transforms.Compose([transforms.ToTensor()])
+        data_set = MNIST('./data/mnist', train=True, download=True, transform=data_transform)
 
-        input_image1, _ = data_set[index1]
-        input_image1 = input_image1.view(-1)
+        # load trained autoencoder model
+        model = autoencoderMLP4Layer(N_bottleneck=8)
+        model.load_state_dict(torch.load(modelPath))
+        model.eval()
 
-        input_image2, _ = data_set[index2]
-        input_image2 = input_image2.view(-1)
+        # get input image 1 from dataset and flatten it
+        inputImage1, _ = data_set[index1]
+        inputImage1 = inputImage1.view(-1)
 
-        bottleneck1 = self.model.encode(input_image1)
-        bottleneck2 = self.model.encode(input_image2)
+        # get input image 2 from dataset and flatten it
+        inputImage2, _ = data_set[index2]
+        inputImage2 = inputImage2.view(-1)
 
+        # encode both images
+        bottleneck1 = model.encode(inputImage1)
+        bottleneck2 = model.encode(inputImage2)
+
+        # interpolate the bottlenecks and store them in an array
         interpolatedTensors = []
-        for step in range(self.n_steps):
-            alpha = step / (self.n_steps -1)
-            interpolatedBottleneck = alpha*bottleneck1 + (1-alpha)*bottleneck2
+        for step in range(numSteps):
+            percent = step / (numSteps - 1)
+            interpolatedBottleneck = percent * bottleneck1 + (1 - percent) * bottleneck2
             interpolatedTensors.append(interpolatedBottleneck)
 
+        # decode images and store them in new array
+        decodedImages = [model.decode(tensor) for tensor in interpolatedTensors]
 
+        # add original images to decoded images array for the plot
+        decodedImages.insert(0, inputImage2)
+        decodedImages.append(inputImage1)
 
-        decoded_images = [self.model.decode(tensor) for tensor in interpolatedTensors]
-
-        decoded_images.insert(0,input_image2)
-        decoded_images.append(input_image1)
-
+        # display original images and interpolated images
         plt.figure(figsize=(8, 2))
-        for i, decoded_image in enumerate(decoded_images):
-            plt.subplot(1, self.n_steps+2, i + 1)
-            plt.imshow(decoded_image.view(28, 28).detach().numpy(), cmap='gray')
-            if i == 0: plt.title('Image 1')
-            elif i == self.n_steps+1: plt.title('Image 2')
-            else: plt.title(f'Step {i}')
+        for i, decodedImage in enumerate(decodedImages):
+            plt.subplot(1, numSteps + 2, i + 1)
+            plt.imshow(decodedImage.view(28, 28).detach().numpy(), cmap='gray')
+            if i == 0:
+                plt.title('Image 1')
+            elif i == numSteps + 1:
+                plt.title('Image 2')
+            else:
+                plt.title(f'Step {i}')
 
         plt.show()

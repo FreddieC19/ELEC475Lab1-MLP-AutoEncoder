@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 
-
 class autoencoderMLP4Layer(nn.Module):
     def __init__(self, N_input=784, N_bottleneck=8, N_output=784):
         super(autoencoderMLP4Layer, self).__init__()
