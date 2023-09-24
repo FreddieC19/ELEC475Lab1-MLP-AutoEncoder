@@ -2,7 +2,6 @@ import argparse
 import datetime
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torchsummary
 from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets
